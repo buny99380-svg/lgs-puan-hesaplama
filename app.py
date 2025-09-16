@@ -12,8 +12,6 @@ import sqlite3
 app = Flask(__name__)
 
 # Database configuration - SQLite for all environments
-import tempfile
-import os
 
 # Use a writable directory for SQLite in production
 if os.environ.get('RENDER'):
@@ -722,8 +720,12 @@ def mock_exam():
                 mock_exam = MockExam(
                     user_id=session['user_id'],
                     exam_name=data.get('exam_name', 'Deneme Sınavı'),
-                    score=data.get('score', 0),
-                    duration=data.get('duration', 0)
+                    total_questions=data.get('total_questions', 90),
+                    correct_answers=data.get('correct_answers', 0),
+                    wrong_answers=data.get('wrong_answers', 0),
+                    empty_answers=data.get('empty_answers', 0),
+                    time_spent=data.get('time_spent', 0),
+                    subject_scores=data.get('subject_scores', {})
                 )
                 db.session.add(mock_exam)
                 db.session.commit()
@@ -742,8 +744,11 @@ def mock_exam():
                 'exams': [{
                     'id': e.id,
                     'name': e.exam_name,
-                    'score': e.score,
-                    'duration': e.duration,
+                    'total_questions': e.total_questions,
+                    'correct_answers': e.correct_answers,
+                    'wrong_answers': e.wrong_answers,
+                    'empty_answers': e.empty_answers,
+                    'time_spent': e.time_spent,
                     'date': e.created_at.strftime('%Y-%m-%d')
                 } for e in exams]
             })
@@ -752,8 +757,8 @@ def mock_exam():
             return jsonify({
                 'success': True,
                 'exams': [
-                    {'id': 1, 'name': 'Örnek Deneme 1', 'score': 350, 'duration': 120, 'date': '2024-01-15'},
-                    {'id': 2, 'name': 'Örnek Deneme 2', 'score': 380, 'duration': 115, 'date': '2024-01-20'}
+                    {'id': 1, 'name': 'Örnek Deneme 1', 'total_questions': 90, 'correct_answers': 70, 'wrong_answers': 15, 'empty_answers': 5, 'time_spent': 120, 'date': '2024-01-15'},
+                    {'id': 2, 'name': 'Örnek Deneme 2', 'total_questions': 90, 'correct_answers': 75, 'wrong_answers': 12, 'empty_answers': 3, 'time_spent': 115, 'date': '2024-01-20'}
                 ]
             })
     except Exception as e:
@@ -761,6 +766,102 @@ def mock_exam():
         return jsonify({
             'success': False,
             'message': 'Deneme sınavı sistemi geçici olarak kullanılamıyor.'
+        })
+
+@app.route('/study-plan', methods=['GET', 'POST'])
+@login_required
+def study_plan():
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            
+            # Create new study plan
+            try:
+                # Deactivate existing plans
+                StudyPlan.query.filter_by(user_id=session['user_id'], is_active=True).update({'is_active': False})
+                
+                plan = StudyPlan(
+                    user_id=session['user_id'],
+                    plan_name=data.get('plan_name', 'Yeni Çalışma Planı'),
+                    target_score=data.get('target_score', 400),
+                    target_date=datetime.strptime(data.get('target_date', '2024-06-01'), '%Y-%m-%d').date(),
+                    daily_study_hours=data.get('daily_study_hours', 4.0),
+                    subjects_focus=data.get('subjects_focus', {}),
+                    is_active=True
+                )
+                db.session.add(plan)
+                db.session.commit()
+                
+                return jsonify({'success': True, 'message': 'Çalışma planı oluşturuldu'})
+            except Exception as db_error:
+                print(f"Study plan save error: {db_error}")
+                db.session.rollback()
+                return jsonify({'success': False, 'message': 'Çalışma planı kaydedilemedi'})
+        
+        # GET request - return active study plan
+        try:
+            active_plan = StudyPlan.query.filter_by(user_id=session['user_id'], is_active=True).first()
+            
+            if active_plan:
+                return jsonify({
+                    'success': True,
+                    'plan': {
+                        'id': active_plan.id,
+                        'name': active_plan.plan_name,
+                        'target_score': active_plan.target_score,
+                        'target_date': active_plan.target_date.strftime('%Y-%m-%d'),
+                        'daily_study_hours': active_plan.daily_study_hours,
+                        'subjects_focus': active_plan.subjects_focus,
+                        'created_at': active_plan.created_at.strftime('%Y-%m-%d')
+                    }
+                })
+            else:
+                # Return sample plan if no active plan
+                return jsonify({
+                    'success': True,
+                    'plan': {
+                        'id': 1,
+                        'name': 'Örnek Çalışma Planı',
+                        'target_score': 400,
+                        'target_date': '2024-06-01',
+                        'daily_study_hours': 4.0,
+                        'subjects_focus': {
+                            'matematik': 30,
+                            'turkce': 25,
+                            'fen': 25,
+                            'inkilap': 10,
+                            'din': 5,
+                            'ingilizce': 5
+                        },
+                        'created_at': '2024-01-15'
+                    }
+                })
+        except Exception as db_error:
+            print(f"Study plan query error: {db_error}")
+            return jsonify({
+                'success': True,
+                'plan': {
+                    'id': 1,
+                    'name': 'Örnek Çalışma Planı',
+                    'target_score': 400,
+                    'target_date': '2024-06-01',
+                    'daily_study_hours': 4.0,
+                    'subjects_focus': {
+                        'matematik': 30,
+                        'turkce': 25,
+                        'fen': 25,
+                        'inkilap': 10,
+                        'din': 5,
+                        'ingilizce': 5
+                    },
+                    'created_at': '2024-01-15'
+                }
+            })
+    except Exception as e:
+        print(f"Study plan error: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Çalışma planı sistemi geçici olarak kullanılamıyor.'
         })
 
 @app.route('/achievements')
