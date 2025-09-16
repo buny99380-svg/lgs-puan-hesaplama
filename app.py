@@ -772,7 +772,16 @@ def populate_sample_schools():
 # Initialize database
 def create_tables():
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            print("Database tables created successfully")
+        except Exception as e:
+            print(f"Database initialization error: {e}")
+
+# Health check endpoint
+@app.route('/health')
+def health_check():
+    return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat()})
 
 # Static file routes for production
 @app.route('/static/<path:filename>')
@@ -819,9 +828,14 @@ def sitemap_xml():
     return Response(sitemap_xml, mimetype='application/xml')
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        populate_sample_schools()
+    # Initialize database with error handling
+    try:
+        with app.app_context():
+            db.create_all()
+            populate_sample_schools()
+            print("Application initialized successfully")
+    except Exception as e:
+        print(f"Initialization error: {e}")
     
     port = int(os.environ.get('PORT', 5000))
     debug = not os.environ.get('DATABASE_URL')  # Production mode if DATABASE_URL exists
