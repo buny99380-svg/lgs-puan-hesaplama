@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    
+    <!-- SEO Meta Tags -->
+    <title>{% block title %}LGS Puan Hesaplama - Ücretsiz Online LGS Puanı Hesaplayıcı{% endblock %}</title>
+    <meta name="description" content="{% block description %}LGS puanınızı ücretsiz hesaplayın! Okul önerileri, deneme sınavı takibi, AI destekli çalışma planı ve başarı rozetleri ile kapsamlı LGS hazırlık sistemi.{% endblock %}">
+    <meta name="keywords" content="LGS puan hesaplama, LGS puanı, lise geçiş sistemi, okul önerileri, deneme sınavı, çalışma planı, LGS hazırlık">
+    <meta name="author" content="LGS Puan Hesaplama Sistemi">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block og_title %}LGS Puan Hesaplama - Ücretsiz Online Hesaplayıcı{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}LGS puanınızı hesaplayın, okul önerilerini görün ve AI destekli çalışma planı oluşturun. Ücretsiz ve kapsamlı LGS hazırlık sistemi.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{{ url_for('static', filename='images/lgs-og-image.png', _external=True) }}">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:site_name" content="LGS Puan Hesaplama">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}LGS Puan Hesaplama{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}LGS puanınızı hesaplayın ve okul önerilerini görün{% endblock %}">
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/lgs-twitter-card.png', _external=True) }}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request.url }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "LGS Puan Hesaplama",
+        "description": "LGS puanı hesaplama ve okul önerisi sistemi",
+        "url": "{{ request.url_root }}",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "TRY"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "LGS Puan Hesaplama"
+        }
+    }
+    </script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    {% if session.user_id %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" role="navigation" aria-label="Ana navigasyon">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}" aria-label="Ana sayfa">
+                <i class="fas fa-graduation-cap me-2" aria-hidden="true"></i>LGS Puan Sistemi
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>{{ session.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i>Çıkış Yap
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="{% if not session.user_id %}auth-page{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2026 LGS Puan Hesaplama Sistemi - Bunyamin Palta tarafından geliştirildi</p>
+            <p class="mb-0">
+                <i class="fas fa-robot me-1"></i>AI destekli çalışma önerileri ile başarıya ulaşın!
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

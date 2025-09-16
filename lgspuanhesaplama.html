@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LGS Puan Hesaplama V1</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes gradientBg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes percentilePop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBg 15s ease infinite;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-out;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #0066cc;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+        
+        h1 i {
+            margin-right: 10px;
+            color: #ff6b6b;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .form-column {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .form-column:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-column h3 {
+            display: flex;
+            align-items: center;
+            color: #0066cc;
+            border-bottom: 2px solid #e6e6e6;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        .form-column h3 i {
+            margin-right: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .input-group i {
+            margin-right: 10px;
+            color: #0066cc;
+        }
+        
+        input[type="number"], input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-size: 16px;
+        }
+        
+        input[type="number"]:focus, input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+            outline: none;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #0066cc, #4d94ff);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0, 102, 204, 0.4);
+        }
+        
+        .btn i {
+            margin-right: 10px;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to right, #f86b6b, #ff9966);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: block;
+            margin: 15px auto;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(248, 107, 107, 0.3);
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(248, 107, 107, 0.4);
+        }
+        
+        .reset-btn i {
+            margin-right: 10px;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e6f7ff, #b3e0ff);
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: scale(0.95);
+            transition: transform 0.5s, box-shadow 0.5s;
+        }
+        
+        .result.active {
+            transform: scale(1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 0.5s;
+        }
+        
+        .result h3 {
+            margin-top: 0;
+            color: #0066cc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .result h3 i {
+            margin-right: 10px;
+            animation: float 3s infinite;
+        }
+        
+        .result-detail {
+            font-weight: bold;
+            font-size: 36px;
+            color: #0066cc;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            margin: 15px 0;
+        }
+        
+        .result-message {
+            font-size: 18px;
+            color: #444;
+            margin-top: 15px;
+        }
+        
+        .result-progress {
+            height: 10px;
+            background-color: #e6e6e6;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #23d5ab, #23a6d5, #e73c7e);
+            width: 0%;
+            transition: width 1s;
+            border-radius: 5px;
+        }
+        
+        .percentile {
+            font-size: 20px;
+            color: #27ae60;
+            margin: 10px 0;
+            animation: percentilePop 0.5s ease-out;
+        }
+        
+        .quote {
+            font-style: italic;
+            color: #555;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #0066cc;
+            border-radius: 5px;
+        }
+        
+        .note {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        
+        .note i {
+            color: #ffc107;
+            margin-right: 5px;
+        }
+        
+        .creator {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            padding: 10px 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: linear-gradient(to right, #0066cc, #4d94ff);
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e6f2ff;
+        }
+        
+        @media (max-width: 768px) {
+            .form-column {
+                min-width: 100%;
+                margin: 5px 0;
+            }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: confettiFall 5s ease-in-out forwards;
+        }
+        
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .net-results {
+            margin-top: 25px;
+            display: none;
+            animation: fadeIn 1s;
+        }
+        
+        .net-results.active {
+            display: block;
+        }
+        
+        .net-results h3 {
+            color: #0066cc;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .net-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 5px;
+        }
+        
+        .net-item:last-child {
+            border-bottom: none;
+        }
+        
+        .net-item .subject {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .net-item .subject i {
+            margin-right: 8px;
+            color: #0066cc;
+        }
+        
+        .net-item .value {
+            font-weight: bold;
+            color: #0066cc;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .tab-container {
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .tab.active {
+            background-color: #0066cc;
+            color: white;
+        }
+        
+        .tab-content {
+            padding: 20px;
+            background-color: white;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        .print-btn, .download-btn {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .download-btn {
+            background: linear-gradient(to right, #8e44ad, #9b59b6);
+            box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3);
+        }
+        
+        .print-btn:hover, .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        .download-btn:hover {
+            box-shadow: 0 7px 20px rgba(142, 68, 173, 0.4);
+        }
+        
+        .print-btn i, .download-btn i {
+            margin-right: 10px;
+        }
+        
+        .scoreboard {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #fff3cd, #ffeb3b);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+            animation: fadeIn 1s;
+        }
+        
+        .scoreboard.active {
+            display: block;
+        }
+        
+        .scoreboard h3 {
+            color: #0066cc;
+            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .scoreboard h3 i {
+            margin-right: 10px;
+            animation: float 3s infinite;
+        }
+        
+        .scoreboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .scoreboard-item:last-child {
+            border-bottom: none;
+        }
+        
+        .scoreboard-item .rank {
+            font-weight: bold;
+            color: #0066cc;
+        }
+        
+        .scoreboard-item .username {
+            flex: 1;
+            margin-left: 10px;
+            color: #333;
+        }
+        
+        .scoreboard-item .score {
+            font-weight: bold;
+            color: #0066cc;
+        }
+        
+        @media print {
+            body {
+                background: none;
+                animation: none;
+            }
+            
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+                padding: 0;
+                animation: none;
+            }
+            
+            .btn, .reset-btn, .print-btn, .download-btn, .tabs, .logout-btn {
+                display: none;
+            }
+            
+            .tab-content {
+                display: block !important;
+            }
+            
+            .net-results, .scoreboard {
+                display: block !important;
+            }
+        }
+        
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 102, 204, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s;
+        }
+        
+        .splash-content {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .splash-content h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        .splash-content p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .auth-form input {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+        
+        .auth-btn {
+            padding: 12px;
+            font-size: 18px;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        .toggle-auth {
+            margin-top: 10px;
+            color: #ffeb3b;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .toggle-auth:hover {
+            color: #fff;
+        }
+        
+        .error-text {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .user-info span {
+            font-size: 16px;
+            color: #0066cc;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .logout-btn i {
+            margin-right: 5px;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .school-suggestions {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e6f7ff, #b3e0ff);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s;
+        }
+        
+        .school-suggestions h3 {
+            color: #0066cc;
+            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .school-suggestions h3 i {
+            margin-right: 10px;
+            animation: float 3s infinite;
+        }
+        
+        .school-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .school-table th, .school-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .school-table th {
+            background: linear-gradient(to right, #0066cc, #4d94ff);
+            color: white;
+        }
+        
+        .school-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .school-table tr:hover {
+            background-color: #e6f2ff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Giriş Ekranı -->
+    <div class="splash-screen" id="splash-screen">
+        <div class="splash-content">
+            <h2><i class="fas fa-graduation-cap"></i> LGS Puan Hesaplama</h2>
+            <p>Liselere Geçiş Sistemi (LGS) sınavınızın sonuçlarını hemen hesaplamak için doğru ve yanlış sayılarınızı girebilirsiniz. Net puanınızı öğrenin ve hedef liselerinizi belirleyin!</p>
+            
+            <!-- Kayıt Formu -->
+            <div id="register-form" class="auth-form">
+                <input type="text" id="register-username" placeholder="Kullanıcı Adı" required>
+                <input type="password" id="register-password" placeholder="Şifre" required>
+                <button class="auth-btn" onclick="register()"><i class="fas fa-user-plus"></i> KAYIT OL</button>
+                <div class="error-text" id="register-error"></div>
+                <div class="toggle-auth" onclick="toggleAuth('login')">Zaten hesabınız var mı? Giriş Yap</div>
+            </div>
+            
+            <!-- Giriş Formu -->
+            <div id="login-form" class="auth-form" style="display: none;">
+                <input type="text" id="login-username" placeholder="Kullanıcı Adı" required>
+                <input type="password" id="login-password" placeholder="Şifre" required>
+                <button class="auth-btn" onclick="login()"><i class="fas fa-sign-in-alt"></i> GİRİŞ YAP</button>
+                <div class="error-text" id="login-error"></div>
+                <div class="toggle-auth" onclick="toggleAuth('register')">Hesabınız yok mu? Kayıt Ol</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="calculator-container" style="display: none;">
+        <div class="user-info">
+            <span id="user-greeting">Hoş geldiniz, Kullanıcı</span>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</button>
+        </div>
+        <h1><i class="fas fa-calculator"></i> LGS Puan Hesaplama <i class="fas fa-graduation-cap"></i></h1>
+        
+        <div class="form-group">
+            <div class="form-column">
+                <h3>
+                    <i class="fas fa-book"></i> Türkçe
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">Türkçe için maksimum 20 soru bulunmaktadır.</span>
+                    </div>
+                </h3>
+                <div class="input-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label for="turkce-dogru">Doğru Sayısı:</label>
+                </div>
+                <input type="number" id="turkce-dogru" min="0" max="20" step="1" value="0" oninput="validateInput(this, 20)">
+                <div class="error-message" id="turkce-dogru-error">Maksimum 20 doğru girebilirsiniz.</div>
+                
+                <div class="input-group">
+                    <i class="fas fa-times-circle"></i>
+                    <label for="turkce-yanlis">Yanlış Sayısı:</label>
+                </div>
+                <input type="number" id="turkce-yanlis" min="0" max="20" step="1" value="0" oninput="validateInput(this, 20)">
+                <div class="error-message" id="turkce-yanlis-error">Maksimum 20 yanlış girebilirsiniz.</div>
+            </div>
+            
+            <div class="form-column">
+                <h3>
+                    <i class="fas fa-square-root-alt"></i> Matematik
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">Matematik için maksimum 20 soru bulunmaktadır.</span>
+                    </div>
+                </h3>
+                <div class="input-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label for="matematik-dogru">Doğru Sayısı:</label>
+                </div>
+                <input type="number" id="matematik-dogru" min="0" max="20" step="1" value="0" oninput="validateInput(this, 20)">
+                <div class="error-message" id="matematik-dogru-error">Maksimum 20 doğru girebilirsiniz.</div>
+                
+                <div class="input-group">
+                    <i class="fas fa-times-circle"></i>
+                    <label for="matematik-yanlis">Yanlış Sayısı:</label>
+                </div>
+                <input type="number" id="matematik-yanlis" min="0" max="20" step="1" value="0" oninput="validateInput(this, 20)">
+                <div class="error-message" id="matematik-yanlis-error">Maksimum 20 yanlış girebilirsiniz.</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="form-column">
+                <h3>
+                    <i class="fas fa-flask"></i> Fen Bilimleri
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">Fen Bilimleri için maksimum 20 soru bulunmaktadır.</span>
+                    </div>
+                </h3>
+                <div class="input-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label for="fen-dogru">Doğru Sayısı:</label>
+                </div>
+                <input type="number" id="fen-dogru" min="0" max="20" step="1" value="0" oninput="validateInput(this, 20)">
+                <div class="error-message" id="fen-dogru-error">Maksimum 20 doğru girebilirsiniz.</div>
+                
+                <div class="input-group">
+                    <i class="fas fa-times-circle"></i>
+                    <label for="fen-yanlis">Yanlış Sayısı:</label>
+                </div>
+                <input type="number" id="fen-yanlis" min="0" max="20" step="1" value="0" oninput="validateInput(this, 20)">
+                <div class="error-message" id="fen-yanlis-error">Maksimum 20 yanlış girebilirsiniz.</div>
+            </div>
+            
+            <div class="form-column">
+                <h3>
+                    <i class="fas fa-landmark"></i> İnkılap Tarihi
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">İnkılap Tarihi için maksimum 10 soru bulunmaktadır.</span>
+                    </div>
+                </h3>
+                <div class="input-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label for="inkılap-dogru">Doğru Sayısı:</label>
+                </div>
+                <input type="number" id="inkılap-dogru" min="0" max="10" step="1" value="0" oninput="validateInput(this, 10)">
+                <div class="error-message" id="inkılap-dogru-error">Maksimum 10 doğru girebilirsiniz.</div>
+                
+                <div class="input-group">
+                    <i class="fas fa-times-circle"></i>
+                    <label for="inkılap-yanlis">Yanlış Sayısı:</label>
+                </div>
+                <input type="number" id="inkılap-yanlis" min="0" max="10" step="1" value="0" oninput="validateInput(this, 10)">
+                <div class="error-message" id="inkılap-yanlis-error">Maksimum 10 yanlış girebilirsiniz.</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="form-column">
+                <h3>
+                    <i class="fas fa-pray"></i> Din Kültürü
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">Din Kültürü için maksimum 10 soru bulunmaktadır.</span>
+                    </div>
+                </h3>
+                <div class="input-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label for="din-dogru">Doğru Sayısı:</label>
+                </div>
+                <input type="number" id="din-dogru" min="0" max="10" step="1" value="0" oninput="validateInput(this, 10)">
+                <div class="error-message" id="din-dogru-error">Maksimum 10 doğru girebilirsiniz.</div>
+                
+                <div class="input-group">
+                    <i class="fas fa-times-circle"></i>
+                    <label for="din-yanlis">Yanlış Sayısı:</label>
+                </div>
+                <input type="number" id="din-yanlis" min="0" max="10" step="1" value="0" oninput="validateInput(this, 10)">
+                <div class="error-message" id="din-yanlis-error">Maksimum 10 yanlış girebilirsiniz.</div>
+            </div>
+            
+            <div class="form-column">
+                <h3>
+                    <i class="fas fa-language"></i> İngilizce
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">İngilizce için maksimum 10 soru bulunmaktadır.</span>
+                    </div>
+                </h3>
+                <div class="input-group">
+                    <i class="fas fa-check-circle"></i>
+                    <label for="ingilizce-dogru">Doğru Sayısı:</label>
+                </div>
+                <input type="number" id="ingilizce-dogru" min="0" max="10" step="1" value="0" oninput="validateInput(this, 10)">
+                <div class="error-message" id="ingilizce-dogru-error">Maksimum 10 doğru girebilirsiniz.</div>
+                
+                <div class="input-group">
+                    <i class="fas fa-times-circle"></i>
+                    <label for="ingilizce-yanlis">Yanlış Sayısı:</label>
+                </div>
+                <input type="number" id="ingilizce-yanlis" min="0" max="10" step="1" value="0" oninput="validateInput(this, 10)">
+                <div class="error-message" id="ingilizce-yanlis-error">Maksimum 10 yanlış girebilirsiniz.</div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="hesapla()"><i class="fas fa-calculator"></i> PUANIMI HESAPLA</button>
+        <button class="reset-btn" onclick="formReset()"><i class="fas fa-redo-alt"></i> FORMU SIFIRLA</button>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" onclick="openTab('sonuc-tab')">Puan Sonucu</div>
+                <div class="tab" onclick="openTab('detay-tab')">Net Detayları</div>
+                <div class="tab" onclick="openTab('bilgi-tab')">Katsayı Bilgileri</div>
+                <div class="tab" onclick="openTab('puan-tablosu-tab')">Puan Tablosu</div>
+                <div class="tab" onclick="openTab('okul-oneri-tab')">Hedef Okul Önerisi</div>
+            </div>
+            
+            <div class="tab-content active" id="sonuc-tab">
+                <div class="result" id="sonuc">
+                    <h3><i class="fas fa-chart-line"></i> LGS Puanınız</h3>
+                    <div class="result-detail" id="puan">0.00</div>
+                    <div class="percentile" id="percentile">
+                        Yüzdelik Dilim: %0
+                        <div class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Yüzdelik dilim, sizin puanınızın diğer öğrencilerden ne kadar yüksek olduğunu gösterir. Örneğin, %90 ise öğrencilerin %90'ını geçtiniz demektir.</span>
+                        </div>
+                    </div>
+                    <div class="result-progress">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <div class="result-message" id="result-message">Puanınızı öğrenmek için formu doldurun ve hesapla butonuna tıklayın.</div>
+                    <div class="quote" id="quote"></div>
+                    <div class="scoreboard" id="scoreboard">
+                        <h3><i class="fas fa-trophy"></i> Puanınız</h3>
+                        <div class="scoreboard-item" id="scoreboard-user">
+                            <span class="rank">-</span>
+                            <span class="username">Puanınızı hesaplayın</span>
+                            <span class="score">0.00</span>
+                        </div>
+                    </div>
+                    <button class="print-btn" onclick="printResults()"><i class="fas fa-print"></i> SONUÇLARI YAZDIR</button>
+                    <button class="download-btn" onclick="downloadReport()"><i class="fas fa-download"></i> RAPORU İNDİR</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="detay-tab">
+                <div class="net-results" id="net-results">
+                    <h3><i class="fas fa-tasks"></i> NET SONUÇLARINIZ</h3>
+                    <div class="net-item">
+                        <div class="subject"><i class="fas fa-book"></i> Türkçe</div>
+                        <div class="value" id="turkce-net">0.00</div>
+                    </div>
+                    <div class="net-item">
+                        <div class="subject"><i class="fas fa-square-root-alt"></i> Matematik</div>
+                        <div class="value" id="matematik-net">0.00</div>
+                    </div>
+                    <div class="net-item">
+                        <div class="subject"><i class="fas fa-flask"></i> Fen Bilimleri</div>
+                        <div class="value" id="fen-net">0.00</div>
+                    </div>
+                    <div class="net-item">
+                        <div class="subject"><i class="fas fa-landmark"></i> İnkılap Tarihi</div>
+                        <div class="value" id="inkılap-net">0.00</div>
+                    </div>
+                    <div class="net-item">
+                        <div class="subject"><i class="fas fa-pray"></i> Din Kültürü</div>
+                        <div class="value" id="din-net">0.00</div>
+                    </div>
+                    <div class="net-item">
+                        <div class="subject"><i class="fas fa-language"></i> İngilizce</div>
+                        <div class="value" id="ingilizce-net">0.00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="bilgi-tab">
+                <table>
+                    <tr>
+                        <th><i class="fas fa-book-open"></i> Ders</th>
+                        <th><i class="fas fa-question-circle"></i> Soru Sayısı</th>
+                        <th><i class="fas fa-weight-hanging"></i> Kat Sayısı</th>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-book"></i> Türkçe</td>
+                        <td>20</td>
+                        <td>4.35</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-square-root-alt"></i> Matematik</td>
+                        <td>20</td>
+                        <td>4.26</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-flask"></i> Fen Bilimleri</td>
+                        <td>20</td>
+                        <td>4.13</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-landmark"></i> T.C. İnkılap Tarihi</td>
+                        <td>10</td>
+                        <td>1.67</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-pray"></i> Din Kültürü</td>
+                        <td>10</td>
+                        <td>1.90</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-language"></i> İngilizce</td>
+                        <td>10</td>
+                        <td>1.51</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="puan-tablosu-tab">
+                <div class="scoreboard" id="scoreboard-tab">
+                    <h3><i class="fas fa-trophy"></i> Puanınız</h3>
+                    <div class="scoreboard-item" id="scoreboard-tab-user">
+                        <span class="rank">-</span>
+                        <span class="username">Puanınızı hesaplayın</span>
+                        <span class="score">0.00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="okul-oneri-tab">
+                <div class="school-suggestions" id="school-suggestions">
+                    <h3><i class="fas fa-school"></i> Hedef Okul Önerileri</h3>
+                    <p>Puanınızı hesaplayarak size uygun liseleri görün. Öneriler yaklaşık olup resmi sonuçlar için MEB kılavuzunu kontrol edin.</p>
+                    <table class="school-table" id="school-table">
+                        <tr>
+                            <th><i class="fas fa-school"></i> Okul Adı</th>
+                            <th><i class="fas fa-graduation-cap"></i> Türü</th>
+                            <th><i class="fas fa-star"></i> Minimum Puan</th>
+                        </tr>
+                        <tr id="no-suggestions">
+                            <td colspan="3">Puanınızı hesaplayın ve hedef okulları görün!</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="note">
+            <p><i class="fas fa-info-circle"></i> Not: Bu hesaplama, tam netlerde 500 puan verecek şekilde ayarlanmış katsayılara dayalı yaklaşık bir sonuç sağlar. Resmi sonuçlar için MEB'in açıkladığı sonuçları bekleyiniz. Puan, netlerin katsayılarla çarpılması ve sabit bir değer (194.65) eklenmesiyle hesaplanır.</p>
+        </div>
+        
+        <div class="creator">
+            <p>Yapan kişi: Bunyamin Palta</p>
+        </div>
+    </div>
+
+    <!-- tawk.to Chat Widget -->
+    <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/YOUR_PROPERTY_ID/default'; // tawk.to'dan kendi Property ID'nizi alın
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+        })();
+        // Widget özelleştirme
+        Tawk_API.onLoad = function(){
+            Tawk_API.setAttributes({
+                'name' : localStorage.getItem('currentUser') || 'Ziyaretçi',
+                'email' : 'ornek@email.com'
+            }, function(error){});
+            Tawk_API.customizeWidget({
+                'bubble': true,
+                'position': 'br' // Sağ alt köşe
+            });
+        };
+    </script>
+
+    <script>
+        // Basit şifre hash fonksiyonu (üretimde bcrypt gibi güvenli bir kütüphane kullanın)
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // 32-bit integer'a dönüştür
+            }
+            return hash.toString();
+        }
+
+        // Kullanıcı verilerini localStorage'dan al
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('users')) || {};
+        }
+
+        // Kullanıcı verilerini localStorage'a kaydet
+        function saveUsers(users) {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Puanları localStorage'dan al
+        function getScores() {
+            return JSON.parse(localStorage.getItem('scores')) || {};
+        }
+
+        // Puanları localStorage'a kaydet
+        function saveScores(scores) {
+            localStorage.setItem('scores', JSON.stringify(scores));
+        }
+
+        // Yüzdelik dilim hesaplama (Normal dağılım varsayımı)
+        function calculatePercentile(score) {
+            const mean = 300; // Ortalama puan
+            const stdDev = 50; // Standart sapma
+            const z = (score - mean) / stdDev;
+            // Yaklaşık CDF (Kümülatif Dağılım Fonksiyonu) için basit bir formül
+            const percentile = 100 * (1 / (1 + Math.exp(-1.702 * z)));
+            return Math.min(99.99, Math.max(0.01, percentile)).toFixed(2);
+        }
+
+        // Motivasyonel alıntılar
+        const quotes = [
+            "Başarı, hazırlık ve fırsatın buluştuğu yerdir. - Bobby Unser",
+            "Eğitim, dünyayı değiştirmek için kullanabileceğiniz en güçlü silahtır. - Nelson Mandela",
+            "Hedeflerinize ulaşmak için her gün bir adım atın. - Anonim",
+            "Zorluklar, büyümenin gizli kapılarıdır. - Anonim",
+            "Çalışmak, hayalleri gerçeğe dönüştürür. - Anonim"
+        ];
+
+        // Rastgele alıntı seç
+        function getRandomQuote() {
+            return quotes[Math.floor(Math.random() * quotes.length)];
+        }
+
+        // Puan tablosunu güncelle (sadece mevcut kullanıcının puanını göster)
+        function updateScoreboard() {
+            const currentUser = localStorage.getItem('currentUser');
+            const scores = getScores();
+            let userScore = scores[currentUser] || 0;
+            let rank = '-';
+
+            // Kullanıcının sıralamasını hesapla
+            if (userScore > 0) {
+                const scoreArray = Object.keys(scores).map(username => ({
+                    username: username,
+                    score: scores[username]
+                }));
+                scoreArray.sort((a, b) => b.score - a.score);
+                const userIndex = scoreArray.findIndex(item => item.username === currentUser);
+                rank = userIndex >= 0 ? (userIndex + 1) + '.' : '-';
+            }
+
+            // Puan Sonucu sekmesindeki puan tablosu
+            const scoreboardUser = document.getElementById('scoreboard-user');
+            if (scoreboardUser) {
+                scoreboardUser.innerHTML = `
+                    <span class="rank">${rank}</span>
+                    <span class="username">${currentUser || 'Kullanıcı'}</span>
+                    <span class="score">${userScore.toFixed(2)}</span>
+                `;
+            }
+
+            // Puan Tablosu sekmesindeki puan tablosu
+            const scoreboardTabUser = document.getElementById('scoreboard-tab-user');
+            if (scoreboardTabUser) {
+                scoreboardTabUser.innerHTML = `
+                    <span class="rank">${rank}</span>
+                    <span class="username">${currentUser || 'Kullanıcı'}</span>
+                    <span class="score">${userScore.toFixed(2)}</span>
+                `;
+            }
+
+            // Puan tablosunu göster
+            const scoreboard = document.getElementById('scoreboard');
+            const scoreboardTab = document.getElementById('scoreboard-tab');
+            if (scoreboard) scoreboard.classList.add('active');
+            if (scoreboardTab) scoreboardTab.classList.add('active');
+        }
+
+        // Okul önerileri oluştur
+        function suggestSchools(score) {
+            const table = document.getElementById('school-table');
+            const noSuggestionsRow = document.getElementById('no-suggestions');
+            
+            // Mevcut satırları temizle (başlık hariç)
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+            
+            // Örnek okul listesi (gerçek veriler için MEB kılavuzu kullanılmalı)
+            const schools = [
+                { name: "İstanbul Atatürk Fen Lisesi", type: "Fen Lisesi", minScore: 480 },
+                { name: "Galatasaray Lisesi", type: "Anadolu Lisesi", minScore: 460 },
+                { name: "Kabataş Erkek Lisesi", type: "Anadolu Lisesi", minScore: 450 },
+                { name: "Bornova Anadolu Lisesi", type: "Anadolu Lisesi", minScore: 420 },
+                { name: "Ankara Fen Lisesi", type: "Fen Lisesi", minScore: 400 },
+                { name: "Yerel Anadolu Lisesi", type: "Anadolu Lisesi", minScore: 350 },
+                { name: "Yerel Meslek Lisesi", type: "Meslek Lisesi", minScore: 300 }
+            ];
+            
+            // Puanına uygun okulları filtrele
+            const suitableSchools = schools.filter(school => score >= school.minScore);
+            
+            if (suitableSchools.length === 0) {
+                noSuggestionsRow.style.display = 'table-row';
+            } else {
+                noSuggestionsRow.style.display = 'none';
+                suitableSchools.forEach(school => {
+                    const row = table.insertRow();
+                    row.insertCell(0).textContent = school.name;
+                    row.insertCell(1).textContent = school.type;
+                    row.insertCell(2).textContent = school.minScore.toFixed(2);
+                });
+            }
+            
+            // Önerileri kaydet (rapor için)
+            window.lastSchoolSuggestions = suitableSchools;
+        }
+
+        // Rapor indir
+        function downloadReport() {
+            const puan = document.getElementById('puan').textContent;
+            const percentile = document.getElementById('percentile').textContent.split('%')[1];
+            const netResults = {
+                turkce: document.getElementById('turkce-net').textContent,
+                matematik: document.getElementById('matematik-net').textContent,
+                fen: document.getElementById('fen-net').textContent,
+                inkılap: document.getElementById('inkılap-net').textContent,
+                din: document.getElementById('din-net').textContent,
+                ingilizce: document.getElementById('ingilizce-net').textContent
+            };
+            const currentUser = localStorage.getItem('currentUser');
+            const date = new Date().toLocaleString('tr-TR');
+            
+            // Okul önerilerini ekle
+            let schoolSuggestionsText = 'Hedef Okul Önerileri:\n';
+            if (window.lastSchoolSuggestions && window.lastSchoolSuggestions.length > 0) {
+                window.lastSchoolSuggestions.forEach(school => {
+                    schoolSuggestionsText += `- ${school.name} (${school.type}, Min. Puan: ${school.minScore})\n`;
+                });
+            } else {
+                schoolSuggestionsText += 'Henüz okul önerisi yok. Puanınızı hesaplayın.\n';
+            }
+            
+            const content = `
+LGS Puan Raporu
+================
+Kullanıcı: ${currentUser}
+Tarih: ${date}
+================
+Puan: ${puan}
+Yüzdelik Dilim: %${percentile}
+================
+Net Sonuçlar:
+- Türkçe: ${netResults.turkce}
+- Matematik: ${netResults.matematik}
+- Fen Bilimleri: ${netResults.fen}
+- İnkılap Tarihi: ${netResults.inkılap}
+- Din Kültürü: ${netResults.din}
+- İngilizce: ${netResults.ingilizce}
+================
+${schoolSuggestionsText}
+================
+Not: Bu yaklaşık bir hesaplama olup resmi sonuçlar için MEB'i takip edin.
+            `;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LGS_Puan_Raporu_${currentUser}_${date.replace(/[\s,:]/g, '_')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Kayıt olma işlemi
+        function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const errorElement = document.getElementById('register-error');
+
+            if (!username || !password) {
+                errorElement.textContent = 'Tüm alanları doldurmalısınız.';
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            const users = getUsers();
+            if (users[username]) {
+                errorElement.textContent = 'Bu kullanıcı adı zaten alınmış.';
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            users[username] = {
+                password: simpleHash(password)
+            };
+            saveUsers(users);
+
+            // Kullanıcıyı oturum açmış olarak işaretle
+            localStorage.setItem('currentUser', username);
+            const userGreeting = document.getElementById('user-greeting');
+            if (userGreeting) {
+                userGreeting.textContent = `Hoş geldiniz, ${username}`;
+            }
+            closeSplash();
+        }
+
+        // Giriş yapma işlemi
+        function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorElement = document.getElementById('login-error');
+
+            const users = getUsers();
+            if (!users[username] || users[username].password !== simpleHash(password)) {
+                errorElement.textContent = 'Kullanıcı adı veya şifre yanlış.';
+                errorElement.style.display = 'block';
+                return;
+            }
+
+            // Kullanıcıyı oturum açmış olarak işaretle
+            localStorage.setItem('currentUser', username);
+            const userGreeting = document.getElementById('user-greeting');
+            if (userGreeting) {
+                userGreeting.textContent = `Hoş geldiniz, ${username}`;
+            }
+            closeSplash();
+        }
+
+        // Çıkış yapma işlemi
+        function logout() {
+            localStorage.removeItem('currentUser');
+            const calculator = document.getElementById('calculator-container');
+            const splash = document.getElementById('splash-screen');
+            if (calculator) calculator.style.display = 'none';
+            if (splash) splash.style.display = 'flex';
+            toggleAuth('login');
+        }
+
+        // Kayıt ve giriş formları arasında geçiş
+        function toggleAuth(form) {
+            const registerForm = document.getElementById('register-form');
+            const loginForm = document.getElementById('login-form');
+            const registerError = document.getElementById('register-error');
+            const loginError = document.getElementById('login-error');
+            if (registerForm) registerForm.style.display = form === 'register' ? 'flex' : 'none';
+            if (loginForm) loginForm.style.display = form === 'login' ? 'flex' : 'none';
+            if (registerError) registerError.style.display = 'none';
+            if (loginError) loginError.style.display = 'none';
+        }
+
+        // Giriş ekranını kapat
+        function closeSplash() {
+            const splash = document.getElementById('splash-screen');
+            const calculator = document.getElementById('calculator-container');
+            
+            if (!splash || !calculator) {
+                console.error('Hata: splash-screen veya calculator-container bulunamadı.');
+                return;
+            }
+            
+            splash.style.animation = 'fadeOut 0.5s forwards';
+            setTimeout(() => {
+                if (splash) splash.style.display = 'none';
+                if (calculator) calculator.style.display = 'block';
+                if (splash) splash.style.animation = '';
+            }, 500);
+        }
+
+        // Sayfayı yüklerken oturum kontrolü
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = localStorage.getItem('currentUser');
+            const userGreeting = document.getElementById('user-greeting');
+            const splash = document.getElementById('splash-screen');
+            const calculator = document.getElementById('calculator-container');
+
+            if (currentUser && userGreeting && splash && calculator) {
+                userGreeting.textContent = `Hoş geldiniz, ${currentUser}`;
+                closeSplash();
+                updateScoreboard();
+            }
+
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach((input, index) => {
+                setTimeout(() => {
+                    if (input) input.style.animation = 'fadeIn 0.5s forwards';
+                }, index * 50);
+            });
+        });
+        
+        function hesapla() {
+            // Tüm değerleri al
+            const turkceDogru = parseInt(document.getElementById('turkce-dogru').value) || 0;
+            const turkceYanlis = parseInt(document.getElementById('turkce-yanlis').value) || 0;
+            
+            const matematikDogru = parseInt(document.getElementById('matematik-dogru').value) || 0;
+            const matematikYanlis = parseInt(document.getElementById('matematik-yanlis').value) || 0;
+            
+            const fenDogru = parseInt(document.getElementById('fen-dogru').value) || 0;
+            const fenYanlis = parseInt(document.getElementById('fen-yanlis').value) || 0;
+            
+            const inkılapDogru = parseInt(document.getElementById('inkılap-dogru').value) || 0;
+            const inkılapYanlis = parseInt(document.getElementById('inkılap-yanlis').value) || 0;
+            
+            const dinDogru = parseInt(document.getElementById('din-dogru').value) || 0;
+            const dinYanlis = parseInt(document.getElementById('din-yanlis').value) || 0;
+            
+            const ingilizceDogru = parseInt(document.getElementById('ingilizce-dogru').value) || 0;
+            const ingilizceYanlis = parseInt(document.getElementById('ingilizce-yanlis').value) || 0;
+            
+            // Yanlış sayılarını kontrol et
+            validateInputs();
+
+            // Net hesaplama (3 yanlış 1 doğruyu götürür)
+            const turkceNet = turkceDogru - (turkceYanlis / 3);
+            const matematikNet = matematikDogru - (matematikYanlis / 3);
+            const fenNet = fenDogru - (fenYanlis / 3);
+            const inkılapNet = inkılapDogru - (inkılapYanlis / 3);
+            const dinNet = dinDogru - (dinYanlis / 3);
+            const ingilizceNet = ingilizceDogru - (ingilizceYanlis / 3);
+            
+            // Katsayılar
+            const coefficients = {
+                turkce: 4.35,
+                matematik: 4.26,
+                fen: 4.13,
+                inkılap: 1.67,
+                din: 1.90,
+                ingilizce: 1.51
+            };
+            
+            // Ağırlıklı puan hesaplama
+            const turkcePuan = turkceNet * coefficients.turkce;
+            const matematikPuan = matematikNet * coefficients.matematik;
+            const fenPuan = fenNet * coefficients.fen;
+            const inkılapPuan = inkılapNet * coefficients.inkılap;
+            const dinPuan = dinNet * coefficients.din;
+            const ingilizcePuan = ingilizceNet * coefficients.ingilizce;
+            
+            // Toplam puan (sabit katsayı + ağırlıklı puanlar)
+            const constant = 194.65;
+            let toplamPuan = constant + turkcePuan + matematikPuan + fenPuan + inkılapPuan + dinPuan + ingilizcePuan;
+            
+            // Puan sınırlarını kontrol et
+            toplamPuan = Math.max(100, Math.min(500, toplamPuan));
+            
+            // Yüzdelik dilim
+            const percentile = calculatePercentile(toplamPuan);
+            
+            // Kullanıcının puanını kaydet
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                const scores = getScores();
+                // Sadece daha yüksek puanları kaydet
+                if (!scores[currentUser] || scores[currentUser] < toplamPuan) {
+                    scores[currentUser] = toplamPuan;
+                    saveScores(scores);
+                }
+            }
+            
+            // Net sonuçlarını güncelle
+            document.getElementById('turkce-net').innerHTML = turkceNet.toFixed(2);
+            document.getElementById('matematik-net').innerHTML = matematikNet.toFixed(2);
+            document.getElementById('fen-net').innerHTML = fenNet.toFixed(2);
+            document.getElementById('inkılap-net').innerHTML = inkılapNet.toFixed(2);
+            document.getElementById('din-net').innerHTML = dinNet.toFixed(2);
+            document.getElementById('ingilizce-net').innerHTML = ingilizceNet.toFixed(2);
+            
+            // Net sonuçlarını göster
+            const netResults = document.getElementById('net-results');
+            netResults.classList.add('active');
+            
+            // Animasyonlu sonuç gösterimi
+            const resultDiv = document.getElementById('sonuc');
+            resultDiv.classList.add('active');
+            
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = '0%';
+            
+            // Yavaşça puan artışı
+            const startPuan = 0;
+            const endPuan = toplamPuan;
+            const duration = 1500; // ms
+            const frameDuration = 10; // ms
+            const frames = duration / frameDuration;
+            const increment = (endPuan - startPuan) / frames;
+            
+            let currentPuan = startPuan;
+            let currentFrame = 0;
+            
+            const updatePuan = () => {
+                currentFrame++;
+                currentPuan += increment;
+                
+                if (currentFrame <= frames) {
+                    document.getElementById('puan').innerHTML = currentPuan.toFixed(2);
+                    const progressWidth = (currentPuan / 500) * 100; // 500 maksimum puan
+                    progressBar.style.width = Math.min(progressWidth, 100) + '%';
+                    setTimeout(updatePuan, frameDuration);
+                } else {
+                    document.getElementById('puan').innerHTML = endPuan.toFixed(2);
+                    document.getElementById('percentile').innerHTML = `Yüzdelik Dilim: %${percentile} <div class="tooltip"><i class="fas fa-info-circle"></i><span class="tooltiptext">Yüzdelik dilim, sizin puanınızın diğer öğrencilerden ne kadar yüksek olduğunu gösterir. Örneğin, %90 ise öğrencilerin %90'ını geçtiniz demektir.</span></div>`;
+                    document.getElementById('quote').innerHTML = getRandomQuote();
+                    updateResultMessage(endPuan);
+                    updateScoreboard();
+                    suggestSchools(endPuan);
+                    createConfetti();
+                }
+            };
+            
+            updatePuan();
+        }
+        
+        function updateResultMessage(puan) {
+            const messageElement = document.getElementById('result-message');
+            
+            if (puan < 300) {
+                messageElement.innerHTML = 'Daha fazla çalışmaya ihtiyacın var! 📚';
+            } else if (puan < 350) {
+                messageElement.innerHTML = 'Ortalama bir sonuç! Biraz daha çalışabilirsin. 📝';
+            } else if (puan < 400) {
+                messageElement.innerHTML = 'İyi bir sonuç! 🎉';
+            } else if (puan < 450) {
+                messageElement.innerHTML = 'Çok iyi bir sonuç! 🌟';
+            } else {
+                messageElement.innerHTML = 'Harika bir sonuç! Tebrikler! 🏆';
+            }
+        }
+        
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45aaf2', '#feca57', '#a55eea'];
+            const confettiCount = 100;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        function validateInput(input, max) {
+            let value = parseFloat(input.value) || 0;
+            const errorMessage = document.getElementById(input.id + '-error');
+            
+            // Sadece tam sayılar
+            if (!Number.isInteger(value)) {
+                value = Math.floor(value);
+                input.value = value;
+            }
+            
+            if (value < 0) {
+                input.value = 0;
+                errorMessage.style.display = 'none';
+            } else if (value > max) {
+                input.value = max;
+                errorMessage.style.display = 'block';
+            } else {
+                errorMessage.style.display = 'none';
+            }
+            
+            // Doğru ve yanlış toplamının maksimumu aşmasını engelle
+            const prefix = input.id.split('-')[0];
+            const dogruInput = document.getElementById(prefix + '-dogru');
+            const yanlisInput = document.getElementById(prefix + '-yanlis');
+            const dogruValue = parseInt(dogruInput.value) || 0;
+            const yanlisValue = parseInt(yanlisInput.value) || 0;
+            
+            if (dogruValue + yanlisValue > max) {
+                if (input.id.includes('dogru')) {
+                    yanlisInput.value = Math.max(0, max - dogruValue);
+                } else {
+                    dogruInput.value = Math.max(0, max - yanlisValue);
+                }
+            }
+        }
+        
+        function validateInputs() {
+            const subjects = ['turkce', 'matematik', 'fen', 'inkılap', 'din', 'ingilizce'];
+            const maxQuestions = { turkce: 20, matematik: 20, fen: 20, inkılap: 10, din: 10, ingilizce: 10 };
+            
+            subjects.forEach(subject => {
+                const dogruInput = document.getElementById(subject + '-dogru');
+                const yanlisInput = document.getElementById(subject + '-yanlis');
+                validateInput(dogruInput, maxQuestions[subject]);
+                validateInput(yanlisInput, maxQuestions[subject]);
+            });
+        }
+        
+        function formReset() {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                input.value = 0;
+                const errorMessage = document.getElementById(input.id + '-error');
+                errorMessage.style.display = 'none';
+            });
+            
+            document.getElementById('puan').innerHTML = '0.00';
+            document.getElementById('percentile').innerHTML = 'Yüzdelik Dilim: %0 <div class="tooltip"><i class="fas fa-info-circle"></i><span class="tooltiptext">Yüzdelik dilim, sizin puanınızın diğer öğrencilerden ne kadar yüksek olduğunu gösterir. Örneğin, %90 ise öğrencilerin %90’ını geçtiniz demektir.</span></div>';
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('result-message').innerHTML = 'Puanınızı öğrenmek için formu doldurun ve hesapla butonuna tıklayın.';
+            document.getElementById('quote').innerHTML = '';
+            
+            const netResults = document.getElementById('net-results');
+            netResults.classList.remove('active');
+            
+            const resultDiv = document.getElementById('sonuc');
+            resultDiv.classList.remove('active');
+            
+            const netValues = ['turkce-net', 'matematik-net', 'fen-net', 'inkılap-net', 'din-net', 'ingilizce-net'];
+            netValues.forEach(id => {
+                document.getElementById(id).innerHTML = '0.00';
+            });
+            
+            // Puan tablosunu güncelle
+            updateScoreboard();
+            
+            // Okul önerilerini sıfırla
+            suggestSchools(0);
+        }
+        
+        function openTab(tabId) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            const tabElement = document.querySelector(`.tab[onclick="openTab('${tabId}')"]`);
+            const contentElement = document.getElementById(tabId);
+            if (tabElement) tabElement.classList.add('active');
+            if (contentElement) contentElement.classList.add('active');
+        }
+        
+        function printResults() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

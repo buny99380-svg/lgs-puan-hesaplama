@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Giriş Yap - LGS Puan Hesaplama{% endblock %}
+
+{% block content %}
+<!-- Giriş Ekranı -->
+<div class="splash-screen" id="splash-screen">
+    <div class="splash-content">
+        <h2><i class="fas fa-graduation-cap"></i> LGS Puan Hesaplama</h2>
+        <p>Liselere Geçiş Sistemi (LGS) sınavınızın sonuçlarını hemen hesaplamak için doğru ve yanlış sayılarınızı girebilirsiniz. Net puanınızı öğrenin ve hedef liselerinizi belirleyin!</p>
+        
+        <!-- Kayıt Formu -->
+        <div id="register-form" class="auth-form">
+            <input type="text" id="register-username" placeholder="Kullanıcı Adı" required>
+            <input type="password" id="register-password" placeholder="Şifre" required>
+            <button class="auth-btn" onclick="register()"><i class="fas fa-user-plus"></i> KAYIT OL</button>
+            <div class="error-text" id="register-error"></div>
+            <div class="toggle-auth" onclick="toggleAuth('login')">Zaten hesabınız var mı? Giriş Yap</div>
+        </div>
+        
+        <!-- Giriş Formu -->
+        <div id="login-form" class="auth-form" style="display: none;">
+            <input type="text" id="login-username" placeholder="Kullanıcı Adı" required>
+            <input type="password" id="login-password" placeholder="Şifre" required>
+            <button class="auth-btn" onclick="login()"><i class="fas fa-sign-in-alt"></i> GİRİŞ YAP</button>
+            <div class="error-text" id="login-error"></div>
+            <div class="toggle-auth" onclick="toggleAuth('register')">Hesabınız yok mu? Kayıt Ol</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Kayıt ve giriş formları arasında geçiş
+function toggleAuth(form) {
+    const registerForm = document.getElementById('register-form');
+    const loginForm = document.getElementById('login-form');
+    const registerError = document.getElementById('register-error');
+    const loginError = document.getElementById('login-error');
+    
+    if (registerForm) registerForm.style.display = form === 'register' ? 'flex' : 'none';
+    if (loginForm) loginForm.style.display = form === 'login' ? 'flex' : 'none';
+    if (registerError) registerError.style.display = 'none';
+    if (loginError) loginError.style.display = 'none';
+}
+
+function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+// Kayıt olma işlemi
+function register() {
+    const username = document.getElementById('register-username').value.trim();
+    const password = document.getElementById('register-password').value;
+
+    if (!username || !password) {
+        showError('register-error', 'Tüm alanları doldurmalısınız.');
+        return;
+    }
+
+    fetch('/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/dashboard';
+        } else {
+            showError('register-error', data.message);
+        }
+    })
+    .catch(error => {
+        showError('register-error', 'Bağlantı hatası oluştu');
+    });
+}
+
+// Giriş yapma işlemi
+function login() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!username || !password) {
+        showError('login-error', 'Kullanıcı adı ve şifre gerekli.');
+        return;
+    }
+
+    fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/dashboard';
+        } else {
+            showError('login-error', data.message);
+        }
+    })
+    .catch(error => {
+        showError('login-error', 'Bağlantı hatası oluştu');
+    });
+}
+
+// Enter tuşu ile form gönderimi
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const registerForm = document.getElementById('register-form');
+            const loginForm = document.getElementById('login-form');
+            
+            if (registerForm && registerForm.style.display !== 'none') {
+                register();
+            } else if (loginForm && loginForm.style.display !== 'none') {
+                login();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - LGS Puan Hesaplama{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="welcome-card">
+                <h1 class="welcome-title">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    Hoş geldiniz, {{ user.username }}!
+                </h1>
+                <p class="welcome-subtitle">AI destekli LGS puan hesaplama ve çalışma sistemi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalAttempts">{{ recent_scores|length }}</h3>
+                    <p>Toplam Deneme</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="bestScore">
+                        {% if recent_scores %}
+                            {{ "%.2f"|format(recent_scores|map(attribute='total_score')|max) }}
+                        {% else %}
+                            0.00
+                        {% endif %}
+                    </h3>
+                    <p>En Yüksek Puan</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="averageScore">
+                        {% if recent_scores %}
+                            {{ "%.2f"|format(recent_scores|map(attribute='total_score')|sum / recent_scores|length) }}
+                        {% else %}
+                            0.00
+                        {% endif %}
+                    </h3>
+                    <p>Ortalama Puan</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="bestPercentile">
+                        {% if recent_scores %}
+                            %{{ "%.1f"|format(recent_scores|map(attribute='percentile')|max) }}
+                        {% else %}
+                            %0.0
+                        {% endif %}
+                    </h3>
+                    <p>En İyi Yüzdelik</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="calculator-tab" data-bs-toggle="tab" data-bs-target="#calculator" type="button" role="tab">
+                        <i class="fas fa-calculator me-2"></i>Puan Hesapla
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="schools-tab" data-bs-toggle="tab" data-bs-target="#schools" type="button" role="tab">
+                        <i class="fas fa-school me-2"></i>Okul Önerileri
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mock-exam-tab" data-bs-toggle="tab" data-bs-target="#mock-exam" type="button" role="tab">
+                        <i class="fas fa-clipboard-check me-2"></i>Deneme Sınavı
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="study-plan-tab" data-bs-toggle="tab" data-bs-target="#study-plan" type="button" role="tab">
+                        <i class="fas fa-calendar-alt me-2"></i>Çalışma Planı
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                        <i class="fas fa-chart-line me-2"></i>Analitik
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai-recommendations" type="button" role="tab">
+                        <i class="fas fa-robot me-2"></i>AI Önerileri
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="achievements-tab" data-bs-toggle="tab" data-bs-target="#achievements" type="button" role="tab">
+                        <i class="fas fa-trophy me-2"></i>Başarılar
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="mainTabContent">
+                <!-- Calculator Tab -->
+                <div class="tab-pane fade show active" id="calculator" role="tabpanel">
+                    <div class="calculator-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-calculator me-2"></i>LGS Puan Hesaplama
+                        </h3>
+                        
+                        <form id="calculatorForm">
+                            <div class="row">
+                                <!-- Türkçe -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="subject-card">
+                                        <h5><i class="fas fa-book me-2"></i>Türkçe</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Doğru</label>
+                                                <input type="number" class="form-control" name="turkce_dogru" min="0" max="20" value="0">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Yanlış</label>
+                                                <input type="number" class="form-control" name="turkce_yanlis" min="0" max="20" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Matematik -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="subject-card">
+                                        <h5><i class="fas fa-square-root-alt me-2"></i>Matematik</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Doğru</label>
+                                                <input type="number" class="form-control" name="matematik_dogru" min="0" max="20" value="0">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Yanlış</label>
+                                                <input type="number" class="form-control" name="matematik_yanlis" min="0" max="20" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fen Bilimleri -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="subject-card">
+                                        <h5><i class="fas fa-flask me-2"></i>Fen Bilimleri</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Doğru</label>
+                                                <input type="number" class="form-control" name="fen_dogru" min="0" max="20" value="0">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Yanlış</label>
+                                                <input type="number" class="form-control" name="fen_yanlis" min="0" max="20" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- İnkılap Tarihi -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="subject-card">
+                                        <h5><i class="fas fa-landmark me-2"></i>İnkılap Tarihi</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Doğru</label>
+                                                <input type="number" class="form-control" name="inkilap_dogru" min="0" max="10" value="0">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Yanlış</label>
+                                                <input type="number" class="form-control" name="inkilap_yanlis" min="0" max="10" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Din Kültürü -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="subject-card">
+                                        <h5><i class="fas fa-pray me-2"></i>Din Kültürü</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Doğru</label>
+                                                <input type="number" class="form-control" name="din_dogru" min="0" max="10" value="0">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Yanlış</label>
+                                                <input type="number" class="form-control" name="din_yanlis" min="0" max="10" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- İngilizce -->
+                                <div class="col-md-6 mb-4">
+                                    <div class="subject-card">
+                                        <h5><i class="fas fa-language me-2"></i>İngilizce</h5>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Doğru</label>
+                                                <input type="number" class="form-control" name="ingilizce_dogru" min="0" max="10" value="0">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Yanlış</label>
+                                                <input type="number" class="form-control" name="ingilizce_yanlis" min="0" max="10" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg me-3">
+                                    <i class="fas fa-calculator me-1"></i>Puanımı Hesapla
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg" onclick="resetForm()">
+                                    <i class="fas fa-redo me-1"></i>Formu Sıfırla
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Results -->
+                        <div id="results" class="results-section mt-5" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="result-card">
+                                        <h4><i class="fas fa-trophy me-2"></i>Sonuçlarınız</h4>
+                                        <div class="result-score">
+                                            <span class="score-label">Toplam Puanınız:</span>
+                                            <span class="score-value" id="totalScore">0.00</span>
+                                        </div>
+                                        <div class="result-percentile">
+                                            <span class="percentile-label">Yüzdelik Dilim:</span>
+                                            <span class="percentile-value" id="percentileValue">%0.0</span>
+                                        </div>
+                                        <div class="progress mt-3">
+                                            <div class="progress-bar" id="scoreProgress" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="net-results">
+                                        <h5><i class="fas fa-list me-2"></i>Net Sonuçlar</h5>
+                                        <div class="net-item">
+                                            <span>Türkçe:</span>
+                                            <span id="turkceNet">0.00</span>
+                                        </div>
+                                        <div class="net-item">
+                                            <span>Matematik:</span>
+                                            <span id="matematikNet">0.00</span>
+                                        </div>
+                                        <div class="net-item">
+                                            <span>Fen:</span>
+                                            <span id="fenNet">0.00</span>
+                                        </div>
+                                        <div class="net-item">
+                                            <span>İnkılap:</span>
+                                            <span id="inkilapNet">0.00</span>
+                                        </div>
+                                        <div class="net-item">
+                                            <span>Din:</span>
+                                            <span id="dinNet">0.00</span>
+                                        </div>
+                                        <div class="net-item">
+                                            <span>İngilizce:</span>
+                                            <span id="ingilizceNet">0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- School Recommendations Tab -->
+                <div class="tab-pane fade" id="schools" role="tabpanel">
+                    <div class="schools-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-school me-2"></i>Okul Önerileri
+                        </h3>
+                        
+                        <!-- Filters -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Şehir</label>
+                                <input type="text" class="form-control" id="cityFilter" placeholder="Şehir adı girin">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Okul Türü</label>
+                                <select class="form-select" id="schoolTypeFilter">
+                                    <option value="">Tümü</option>
+                                    <option value="Fen Lisesi">Fen Lisesi</option>
+                                    <option value="Anadolu Lisesi">Anadolu Lisesi</option>
+                                    <option value="Sosyal Bilimler Lisesi">Sosyal Bilimler Lisesi</option>
+                                    <option value="Özel Lise">Özel Lise</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn btn-primary d-block" onclick="searchSchools()">
+                                    <i class="fas fa-search me-2"></i>Ara
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- School Results -->
+                        <div id="schoolResults">
+                            <div class="text-center">
+                                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Okul önerilerini görmek için arama yapın</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mock Exam Tab -->
+                <div class="tab-pane fade" id="mock-exam" role="tabpanel">
+                    <div class="mock-exam-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-clipboard-check me-2"></i>Deneme Sınavı
+                        </h3>
+                        
+                        <!-- Mock Exam Form -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-pencil-alt me-2"></i>Yeni Deneme Sınavı</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="mockExamForm">
+                                            <div class="mb-3">
+                                                <label class="form-label">Sınav Adı</label>
+                                                <input type="text" class="form-control" id="examName" value="Deneme Sınavı" required>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <label class="form-label">Doğru Sayısı</label>
+                                                    <input type="number" class="form-control" id="mockCorrect" min="0" max="90" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label">Yanlış Sayısı</label>
+                                                    <input type="number" class="form-control" id="mockWrong" min="0" max="90" required>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-3">
+                                                <div class="col-6">
+                                                    <label class="form-label">Boş Sayısı</label>
+                                                    <input type="number" class="form-control" id="mockEmpty" min="0" max="90" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label">Süre (dakika)</label>
+                                                    <input type="number" class="form-control" id="mockTime" min="1" max="180" value="120" required>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-success mt-3 w-100">
+                                                <i class="fas fa-save me-2"></i>Sonuçları Kaydet
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-history me-2"></i>Geçmiş Sınavlar</h5>
+                                    </div>
+                                    <div class="card-body" id="mockExamHistory">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                                            <p>Henüz deneme sınavı kaydı yok</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Study Plan Tab -->
+                <div class="tab-pane fade" id="study-plan" role="tabpanel">
+                    <div class="study-plan-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-calendar-alt me-2"></i>Kişisel Çalışma Planı
+                        </h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-plus me-2"></i>Yeni Plan Oluştur</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="studyPlanForm">
+                                            <div class="mb-3">
+                                                <label class="form-label">Plan Adı</label>
+                                                <input type="text" class="form-control" id="planName" value="LGS Hazırlık Planım" required>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <label class="form-label">Hedef Puan</label>
+                                                    <input type="number" class="form-control" id="targetScore" min="100" max="500" value="450" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label">Hedef Tarih</label>
+                                                    <input type="date" class="form-control" id="targetDate" required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 mt-3">
+                                                <label class="form-label">Günlük Çalışma Saati</label>
+                                                <input type="number" class="form-control" id="dailyHours" min="1" max="12" step="0.5" value="4" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-save me-2"></i>Planı Oluştur
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-calendar-check me-2"></i>Aktif Plan</h5>
+                                    </div>
+                                    <div class="card-body" id="activePlan">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                                            <p>Henüz aktif bir plan yok</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div class="tab-pane fade" id="analytics" role="tabpanel">
+                    <div class="analytics-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-chart-line me-2"></i>Performans Analizi
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <canvas id="scoreChart"></canvas>
+                            </div>
+                            <div class="col-md-6">
+                                <canvas id="subjectChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Recommendations Tab -->
+                <div class="tab-pane fade" id="ai-recommendations" role="tabpanel">
+                    <div class="ai-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-robot me-2"></i>AI Çalışma Önerileri
+                        </h3>
+                        
+                        <div class="ai-buttons mb-4">
+                            <button class="btn btn-primary me-2" onclick="getAIRecommendation('study_plan')">
+                                <i class="fas fa-calendar-alt me-1"></i>Çalışma Planı
+                            </button>
+                            <button class="btn btn-success me-2" onclick="getAIRecommendation('improvement')">
+                                <i class="fas fa-arrow-up me-1"></i>Gelişim Önerileri
+                            </button>
+                            <button class="btn btn-info" onclick="getAIRecommendation('motivation')">
+                                <i class="fas fa-heart me-1"></i>Motivasyon
+                            </button>
+                        </div>
+                        
+                        <div id="aiRecommendation" class="ai-result">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-robot fa-3x mb-3"></i>
+                                <p>AI önerisi almak için yukarıdaki butonlardan birini seçin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements Tab -->
+                <div class="tab-pane fade" id="achievements" role="tabpanel">
+                    <div class="achievements-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-trophy me-2"></i>Başarılarım
+                        </h3>
+                        
+                        <div class="row" id="achievementsList">
+                            <div class="col-12 text-center text-muted">
+                                <i class="fas fa-trophy fa-3x mb-3"></i>
+                                <p>Henüz başarı kazanmadınız. İlk puanınızı hesaplayarak başlayın!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div class="tab-pane fade" id="history" role="tabpanel">
+                    <div class="history-card">
+                        <h3 class="mb-4">
+                            <i class="fas fa-history me-2"></i>Puan Geçmişi
+                        </h3>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Puan</th>
+                                        <th>Yüzdelik</th>
+                                        <th>Türkçe</th>
+                                        <th>Matematik</th>
+                                        <th>Fen</th>
+                                        <th>İnkılap</th>
+                                        <th>Din</th>
+                                        <th>İngilizce</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for score in recent_scores %}
+                                    <tr>
+                                        <td>{{ score.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                        <td><strong>{{ "%.2f"|format(score.total_score) }}</strong></td>
+                                        <td>%{{ "%.1f"|format(score.percentile) }}</td>
+                                        <td>{{ score.turkce_dogru }}/{{ score.turkce_yanlis }}</td>
+                                        <td>{{ score.matematik_dogru }}/{{ score.matematik_yanlis }}</td>
+                                        <td>{{ score.fen_dogru }}/{{ score.fen_yanlis }}</td>
+                                        <td>{{ score.inkilap_dogru }}/{{ score.inkilap_yanlis }}</td>
+                                        <td>{{ score.din_dogru }}/{{ score.din_yanlis }}</td>
+                                        <td>{{ score.ingilizce_dogru }}/{{ score.ingilizce_yanlis }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted">
+                                            Henüz puan hesaplaması yapmadınız
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Yükleniyor...</span>
+                </div>
+                <p class="mt-2 mb-0">İşleniyor...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

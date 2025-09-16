@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /static/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /logout
+
+# Sitemap
+Sitemap: https://your-domain.onrender.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
