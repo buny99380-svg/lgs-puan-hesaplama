@@ -12,8 +12,19 @@ import sqlite3
 app = Flask(__name__)
 
 # Database configuration - SQLite for all environments
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///lgs_database.db'
-print("Using SQLite database")
+import tempfile
+import os
+
+# Use a writable directory for SQLite in production
+if os.environ.get('RENDER'):
+    # On Render, use /tmp directory which is writable
+    db_path = '/tmp/lgs_database.db'
+else:
+    # Local development
+    db_path = 'lgs_database.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+print(f"Using SQLite database at: {db_path}")
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'lgs-puan-hesaplama-secret-key-2024')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -413,9 +424,20 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    user = db.session.get(User, session['user_id'])
-    recent_scores = Score.query.filter_by(user_id=user.id).order_by(Score.created_at.desc()).limit(5).all()
-    return render_template('dashboard.html', user=user, recent_scores=recent_scores)
+    try:
+        user = db.session.get(User, session['user_id'])
+        if not user:
+            # User not found, clear session and redirect to login
+            session.clear()
+            return redirect(url_for('index'))
+        
+        recent_scores = Score.query.filter_by(user_id=user.id).order_by(Score.created_at.desc()).limit(5).all()
+        return render_template('dashboard.html', user=user, recent_scores=recent_scores)
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        # Clear session and redirect to login on any error
+        session.clear()
+        return redirect(url_for('index'))
 
 @app.route('/calculate', methods=['POST'])
 @login_required
@@ -910,16 +932,25 @@ def sitemap_xml():
     
     return Response(sitemap_xml, mimetype='application/xml')
 
-if __name__ == '__main__':
-    # Initialize database with error handling
+# Initialize database on app startup (for both dev and production)
+def init_db():
     try:
         with app.app_context():
+            # Ensure database directory exists
+            db_dir = os.path.dirname(db_path)
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+            
             db.create_all()
             populate_sample_schools()
-            print("Application initialized successfully")
+            print(f"Database initialized successfully at: {db_path}")
     except Exception as e:
-        print(f"Initialization error: {e}")
-    
+        print(f"Database initialization error: {e}")
+
+# Initialize database on import (for production servers like Gunicorn)
+init_db()
+
+if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    debug = not os.environ.get('DATABASE_URL')  # Production mode if DATABASE_URL exists
+    debug = not os.environ.get('RENDER')  # Production mode if on Render
     app.run(debug=debug, host='0.0.0.0', port=port)
